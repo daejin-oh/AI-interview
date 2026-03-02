@@ -157,7 +157,7 @@ def main():
 
         if key == ord('q'):
             print("🔚 'q' pressed. Exiting.")
-            breakgit remote -v
+            break
 
     # ============================
     # 🔥 전체 스레드 종료

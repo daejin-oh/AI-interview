@@ -216,6 +216,8 @@ def gaze_worker():
 
         center_ratio = (center_gaze_time / total_gaze_time * 100.0) if total_gaze_time > 0 else 0.0
         center_score = score_center_ratio(center_ratio)
+        #최종 시선 점수 계산 (정면 60% + 이탈 40%)
+        final_gaze_score = int(round((center_score * 0.6) + (avg_deviation_score * 0.4)))
 
         deviation_count = len(deviation_durations)
 
@@ -267,6 +269,8 @@ def gaze_worker():
             "deviation_count": deviation_count,
             "avg_deviation_score": avg_deviation_score,
             "max_deviation_time": max_deviation_time,
+
+            "final_gaze_score": final_gaze_score,
 
             # 🔽 이탈 방향 비율(이탈 시간 기준)
             "off_center_time": off_center_time,
@@ -340,20 +344,70 @@ def gaze_worker():
     final_center_ratio = (center_gaze_time / total_gaze_time * 100.0) if total_gaze_time > 0 else 0.0
     final_center_score = score_center_ratio(final_center_ratio)
 
+    #전체 면접에 대한 최종 합산 점수 계산
+    total_final_gaze_score = int(round((final_center_score * 0.6) + (final_avg_deviation_score * 0.4)))
+
     # 외부 참조용 저장
     last_center_ratio = final_center_ratio
     last_center_time = center_gaze_time
     last_total_time = total_gaze_time
 
     # 출력
-    print(f"📌 [GAZE] 정면 시선 점수: {final_center_score}점 (정면 유지 {final_center_ratio:.1f}%)\n")
+    print(f"[GAZE] 정면 응시 점수: {final_center_score}점 (정면 유지 {final_center_ratio:.1f}%)")
+    print(f"[GAZE] 시선 이탈 점수: {final_avg_deviation_score}점 (이탈 복귀 평균 {final_avg_deviation_time:.2f}초)")
+    print(f"[GAZE] 최종 시선 종합 점수: {total_final_gaze_score}점")
 
+    # 피드백 생성 및 출력
+    feedback_text = generate_gaze_feedback(
+        total_final_gaze_score,
+        final_center_ratio,
+        final_avg_deviation_time,
+        left_time, right_time, up_time, down_time, off_center_time
+    )
+
+    print("[시선 피드백]")
+    print(feedback_text)
 
 def start_gaze_thread():
     t_gaze = threading.Thread(target=gaze_worker, daemon=True)
     t_gaze.start()
     print("🚀 gaze_thread_example 실행됨! (Camera 공유 버전)")
     return t_gaze
+
+# ---------------------------------------------------------
+# 규칙 기반 피드백 생성 함수
+# ---------------------------------------------------------
+def generate_gaze_feedback(total_score, center_ratio, avg_dev_time,
+                               left_t, right_t, up_t, down_t, off_time):
+    feedbacks = []
+
+    # 1. 종합 평가
+    if total_score >= 80:
+        feedbacks.append("전반적으로 안정적인 시선 처리를 유지했습니다.")
+    elif total_score >= 60:
+        feedbacks.append("시선 처리가 다소 불안정합니다. 면접관(카메라)과 더 눈을 맞추려 노력해 보세요.")
+    else:
+        feedbacks.append("시선 이탈이 잦습니다. 자신감 있는 인상을 위해 카메라를 응시하는 연습이 필요합니다.")
+
+    # 2. 이탈 시간 피드백
+    if avg_dev_time > 2.0:
+        feedbacks.append("- 딴 곳을 응시하는 시간이 다소 깁니다. 답변이 막히더라도 시선을 빨리 정면으로 회복해 보세요.")
+
+    # 3. 습관 분석 (어느 방향을 많이 보는지)
+    if off_time > 0:
+        directions = {"왼쪽": left_t, "오른쪽": right_t, "위": up_t, "아래": down_t}
+        max_dir = max(directions, key=directions.get)
+        max_ratio = (directions[max_dir] / off_time) * 100
+
+        if max_ratio > 40:  # 한 방향으로 40% 이상 치우쳤을 때
+            if max_dir == "위":
+                feedbacks.append(f"- 답변을 생각할 때 주로 '{max_dir}'를 쳐다보는 습관이 있습니다. 허공을 보는 대신 정면을 보세요.")
+            elif max_dir in ["왼쪽", "오른쪽"]:
+                feedbacks.append(f"- 무의식적으로 '{max_dir}'을 응시하는 경향이 있습니다. 시선을 중앙으로 고정해 보세요.")
+            elif max_dir == "아래":
+                feedbacks.append("- 시선이 '아래'로 향하는 경우가 많아 자신감이 부족해 보일 수 있습니다.")
+
+    return "\n".join(feedbacks)
 
 
 if __name__ == "__main__":
