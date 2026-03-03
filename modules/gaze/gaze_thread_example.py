@@ -122,7 +122,6 @@ def gaze_worker():
             down_time = 0.0
 
             calibrate_event.clear()
-            print("🎯 [GAZE] Calibrated & measurement reset/start")
 
         processed = tracker.process_frame(frame)
 
@@ -321,24 +320,24 @@ def gaze_worker():
     final_max_deviation_time = max(deviation_durations) if deviation_durations else 0.0
     final_avg_deviation_score = score_avg_deviation_time(final_avg_deviation_time)
 
-    if off_center_time > 0:
-        print(
-            f"📌 [GAZE] 이탈 방향 비율: "
-            f"좌우 {lr_off_time / off_center_time * 100:.1f}% / "
-            f"위아래 {ud_off_time / off_center_time * 100:.1f}% / "
-            f"상하좌우 {diag_off_time / off_center_time * 100:.1f}% | "
-            f"좌 {left_time / off_center_time * 100:.1f}% 우 {right_time / off_center_time * 100:.1f}% "
-            f"위 {up_time / off_center_time * 100:.1f}% 아래 {down_time / off_center_time * 100:.1f}%"
-        )
-    else:
-        print("📌 [GAZE] 이탈 방향 비율: 측정된 이탈 없음")
+    #if off_center_time > 0:
+    #    print(
+    #        f"📌 [GAZE] 이탈 방향 비율: "
+    #        f"좌우 {lr_off_time / off_center_time * 100:.1f}% / "
+    #        f"위아래 {ud_off_time / off_center_time * 100:.1f}% / "
+    #        f"상하좌우 {diag_off_time / off_center_time * 100:.1f}% | "
+    #        f"좌 {left_time / off_center_time * 100:.1f}% 우 {right_time / off_center_time * 100:.1f}% "
+    #        f"위 {up_time / off_center_time * 100:.1f}% 아래 {down_time / off_center_time * 100:.1f}%"
+    #    )
+    #else:
+    #    print("📌 [GAZE] 이탈 방향 비율: 측정된 이탈 없음")
 
-    print(
-        f"📌 [GAZE] 이탈 시선 점수: {final_avg_deviation_score}점 "
-        f"(평균 {final_avg_deviation_time:.2f}s / "
-        f"횟수 {final_deviation_count} / "
-        f"최대 {final_max_deviation_time:.2f}s)"
-    )
+    #print(
+    #    f"📌 [GAZE] 이탈 시선 점수: {final_avg_deviation_score}점 "
+    #    f"(평균 {final_avg_deviation_time:.2f}s / "
+    #    f"횟수 {final_deviation_count} / "
+    #    f"최대 {final_max_deviation_time:.2f}s)"
+    #)
 
     # 종료 시 최종 계산
     final_center_ratio = (center_gaze_time / total_gaze_time * 100.0) if total_gaze_time > 0 else 0.0
@@ -353,8 +352,8 @@ def gaze_worker():
     last_total_time = total_gaze_time
 
     # 출력
-    print(f"[GAZE] 정면 응시 점수: {final_center_score}점 (정면 유지 {final_center_ratio:.1f}%)")
-    print(f"[GAZE] 시선 이탈 점수: {final_avg_deviation_score}점 (이탈 복귀 평균 {final_avg_deviation_time:.2f}초)")
+    # print(f"[GAZE] 정면 응시 점수: {final_center_score}점 (정면 유지 {final_center_ratio:.1f}%)")
+    # print(f"[GAZE] 시선 이탈 점수: {final_avg_deviation_score}점 (이탈 복귀 평균 {final_avg_deviation_time:.2f}초)")
     print(f"[GAZE] 최종 시선 종합 점수: {total_final_gaze_score}점")
 
     # 피드백 생성 및 출력
